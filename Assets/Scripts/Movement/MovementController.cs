@@ -2,11 +2,20 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
+	// Types
+	public enum MovementType
+	{
+		XYZ,
+		XZ
+	}
+
 	// Public variables
 	public float maxVelocity;
 	public float acceleration;
 	public float maxAcceleration;
 	public float timeToReach;
+	public float jumpForce;
+	public MovementType movementType;
 
 	// Private variables
 	private Rigidbody rigidbody_;
@@ -18,19 +27,55 @@ public class MovementController : MonoBehaviour
 	}
 
 	// Public interface
-	public void Move(Vector2 movement)
+	public void Move(Vector3 movement)
 	{
-		movement = movement.normalized * maxVelocity;
-		MoveUtil.AccelerateClamped(rigidbody_, movement, acceleration, maxAcceleration);
+		switch (movementType)
+		{
+			case MovementType.XYZ:
+				movement = movement.normalized * maxVelocity;
+				MoveUtil.AccelerateClamped(rigidbody_, movement, acceleration, maxAcceleration);
+				break;
+			case MovementType.XZ:
+				movement.y = 0.0f;
+				movement = movement.normalized * maxVelocity;
+				MoveUtil.AccelerateClampedXZ(rigidbody_, movement, acceleration, maxAcceleration);
+				break;
+			default:
+				throw new System.NotImplementedException();
+		}
 	}
-	public void MoveTo(Vector2 location)
+	public void MoveTo(Vector3 location)
 	{
-		MoveUtil.AccelerateClampedToward(rigidbody_, location, acceleration, maxAcceleration, maxVelocity, timeToReach);
+		switch (movementType)
+		{
+			case MovementType.XYZ:
+				MoveUtil.AccelerateClampedToward(rigidbody_, location, acceleration, maxAcceleration, maxVelocity, timeToReach);
+				break;
+			case MovementType.XZ:
+				MoveUtil.AccelerateClampedTowardXZ(rigidbody_, location, acceleration, maxAcceleration, maxVelocity, timeToReach);
+				break;
+			default:
+				throw new System.NotImplementedException();
+		}
+	}
+	public void Jump()
+	{
+		rigidbody_.AddForce(Vector3.up * jumpForce);
 	}
 
 	// Update
 	public void FixedUpdate()
 	{
-		MoveUtil.ClampVelocity(rigidbody_, maxVelocity);
+		switch (movementType)
+		{
+			case MovementType.XYZ:
+				MoveUtil.ClampVelocity(rigidbody_, maxVelocity);
+				break;
+			case MovementType.XZ:
+				MoveUtil.ClampVelocityXZ(rigidbody_, maxVelocity);
+				break;
+			default:
+				throw new System.NotImplementedException();
+		}
 	}
 }
