@@ -21,6 +21,9 @@ public class Level : MonoBehaviour
 		ReadIntroNote,
 		GetFirstCoin,
 		GetSecondCoin,
+		SpinFor100s,
+		SpinForSkulls,
+		Leaving,
 		Done
 	}
 	public delegate void Callback();
@@ -35,10 +38,12 @@ public class Level : MonoBehaviour
 
 	[Header("UI")]
 	public CrosshairController crosshairController;
+	public Animator lookToTheSkiesAnimator;
 
 	[Header("Rooms")]
-	public BlueRoom blueRoom;
 	public RedRoom redRoom;
+	public YellowRoom yellowRoom;
+	public BlueRoom blueRoom;
 
 	[Header("Gates")]
 	public Gate blueGate;
@@ -53,6 +58,8 @@ public class Level : MonoBehaviour
 	[Header("Interactables")]
 	public GameObject introNotePrefab;
 	public GameObject coinPrefab;
+	public GameObject bookPrefab;
+	public GameObject skullPrefab;
 
 	// System variables
 	public static Talisman ActiveTalisman
@@ -99,6 +106,16 @@ public class Level : MonoBehaviour
 			case State.GetFirstCoin:
 				break;
 			case State.GetSecondCoin:
+				break;
+			case State.SpinFor100s:
+				OnGetCoinsTalisman();
+				SetTalisman(Talisman.Coins);
+				break;
+			case State.SpinForSkulls:
+				SpawnOnSlotsWithDestroyCallback(bookPrefab, OnPickedUpBook);
+				break;
+			case State.Leaving:
+				SpawnOnSlotsWithDestroyCallback(skullPrefab, OnPickedUpSkull);
 				break;
 			case State.Done:
 				break;
@@ -156,10 +173,14 @@ public class Level : MonoBehaviour
 		instance_.redRoom.crucible.SetTalisman(talisman);
 		instance_.OnTalismanChanged();
 	}
-	public static void RotateTalisman(Talisman talisman)
+	public static void RotateTalisman()
 	{
 		instance_.redRoom.crucible.RotateTalisman();
 		instance_.OnTalismanChanged();
+	}
+	public void RotateTalisman_Mem()
+	{
+		RotateTalisman();
 	}
 
 	// Update
@@ -189,6 +210,17 @@ public class Level : MonoBehaviour
 			crosshairController.SetCrosshair(Crosshair.Interact);
 		else
 			crosshairController.SetCrosshair(Crosshair.Default);
+
+		if (Input.GetKeyDown(KeyCode.O))
+			yellowRoom.SetWheels(SlotMachineRoll.Bar, SlotMachineRoll.Bar, SlotMachineRoll.Bar);
+		if (Input.GetKeyDown(KeyCode.P))
+			yellowRoom.SetWheels(SlotMachineRoll.Seven, SlotMachineRoll.Seven, SlotMachineRoll.Seven);
+		if (Input.GetKeyDown(KeyCode.L))
+		{
+			OnGetCoinsTalisman();
+			OnGetBookTalisman();
+			OnGetSkullTalisman();
+		}
 	}
 
 	// Events
@@ -204,8 +236,17 @@ public class Level : MonoBehaviour
 			case State.GetSecondCoin:
 				SpawnOnCrucibleWithDestroyCallback(coinPrefab, OnGetSecondCoin);
 				break;
-			case State.Done:
+			case State.SpinFor100s:
+				yellowRoom.SetWheelsNoTripleSeven();
+				break;
+			case State.SpinForSkulls:
 				blueRoom.GenerateStarmap();
+				if (blueRoom.IsConnected)
+					yellowRoom.SetWheels(SlotMachineRoll.Seven, SlotMachineRoll.Seven, SlotMachineRoll.Seven);
+				break;
+			case State.Leaving:
+				break;
+			case State.Done:
 				break;
 			default:
 				throw new System.NotImplementedException();
@@ -246,7 +287,7 @@ public class Level : MonoBehaviour
 	// Story events
 	public void OnReadIntroNote()
 	{
-		// TODO: give hint
+		lookToTheSkiesAnimator.Play("flash");
 		TransitionState(State.GetFirstCoin);
 	}
 	public void OnGetFirstCoin()
@@ -257,9 +298,25 @@ public class Level : MonoBehaviour
 	public void OnGetSecondCoin()
 	{
 		// TODO: play a sound
-		OnGetCoinsTalisman();
-		SetTalisman(Talisman.Coins);
-		TransitionState(State.Done);
+		TransitionState(State.SpinFor100s);
+	}
+	public static void OnSpun100s()
+	{
+		// TODO: play a sound
+		instance_.TransitionState(State.SpinForSkulls);
+	}
+	public void OnPickedUpBook()
+	{
+		OnGetBookTalisman();
+	}
+	public static void OnSpunSkulls()
+	{
+		// TODO: play a sound
+		instance_.TransitionState(State.Leaving);
+	}
+	public static void OnPickedUpSkull()
+	{
+		OnGetSkullTalisman();
 	}
 
 	// Private interface
@@ -270,5 +327,9 @@ public class Level : MonoBehaviour
 	private void SpawnOnCrucibleWithDestroyCallback(GameObject prefab, Callback callback)
 	{
 		SetInteractableDestroyCallback(redRoom.crucible.SpawnOnTable(prefab), callback);
+	}
+	private void SpawnOnSlotsWithDestroyCallback(GameObject prefab, Callback callback)
+	{
+		SetInteractableDestroyCallback(yellowRoom.Payout(prefab), callback);
 	}
 }

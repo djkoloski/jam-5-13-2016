@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: YellowWalkway
+  m_Name: Button
   m_Shader: {fileID: 4800000, guid: 1118fa5245bac704a88e90603f0afb54, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 5
@@ -94,7 +94,7 @@ Material:
       data:
         first:
           name: _Smoothness
-        second: 0
+        second: 1
       data:
         first:
           name: _Occlusion
@@ -142,19 +142,19 @@ Material:
       data:
         first:
           name: _PosterizeLevels
-        second: 16
+        second: 20
       data:
         first:
           name: _NoiseFactor
-        second: 0.11
+        second: 0.96
       data:
         first:
           name: _NoiseScale
-        second: 13.35
+        second: 18.65
       data:
         first:
           name: _TimeScale
-        second: 0.22
+        second: 0.1
     m_Colors:
       data:
         first:
@@ -167,7 +167,7 @@ Material:
       data:
         first:
           name: _Albedo
-        second: {r: 0.8666667, g: 0.84313726, b: 0, a: 1}
+        second: {r: 1, g: 0, b: 0, a: 1}
       data:
         first:
           name: _NoiseMovement
